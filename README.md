@@ -1,2 +1,2 @@
-# advent_2023
-Advent of code 2023 puzzles
+# Advent of Code
+Advent of code puzzles for various years
