@@ -60,7 +60,6 @@ fn process_game(line: &String) -> (u32, u32, u32) {
             count.parse().expect("not a valid number"),
         );
     }
-    // println!("{:?}", color_counter);
     (
         color_counter.max(&Color::Red).clone(),
         color_counter.max(&Color::Green).clone(),
@@ -70,7 +69,7 @@ fn process_game(line: &String) -> (u32, u32, u32) {
 
 fn main() -> Result<(), Error> {
     let (r_max, g_max, b_max) = (12u32, 13u32, 14u32);
-    
+
     let mut id_sum = 0u32;
     let mut power_sum = 0u32;
     for (id, line) in BufReader::new(File::open(INPUT_FILE)?).lines().enumerate() {
@@ -80,7 +79,7 @@ fn main() -> Result<(), Error> {
             id_sum += (id + 1) as u32;
         }
         power_sum += r * g * b;
-        println!("{id}: {:?}, valid: {valid}", (r, g, b));
+        println!("{id}: max counts: r {r:2}, g {g:2}, b {b:2}, valid: {valid}");
     }
     println!("game id sum: {id_sum}");
     println!("power sum: {power_sum}");
