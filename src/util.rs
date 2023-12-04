@@ -1,3 +1,1 @@
-pub fn test() {
-    println!("hello world");
-}
+pub mod io;

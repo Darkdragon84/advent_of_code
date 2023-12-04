@@ -1,7 +1,7 @@
 use regex::Regex;
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{BufRead, BufReader, Error};
+use std::io::Error;
+use advent::util::io::file_lines;
 
 const INPUT_FILE: &str = "data/p2023_02.txt";
 const RE: &str = r"(\d+)\s+(red|green|blue)";
@@ -72,7 +72,7 @@ fn main() -> Result<(), Error> {
 
     let mut id_sum = 0u32;
     let mut power_sum = 0u32;
-    for (id, line) in BufReader::new(File::open(INPUT_FILE)?).lines().enumerate() {
+    for (id, line) in file_lines(INPUT_FILE)?.enumerate() {
         let (r, g, b) = process_game(&line?);
         let valid = r <= r_max && g <= g_max && b <= b_max;
         if valid {

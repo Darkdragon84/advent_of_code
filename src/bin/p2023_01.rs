@@ -1,7 +1,7 @@
 use regex::Regex;
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{BufRead, BufReader, Error};
+use std::io::Error;
+use advent::util::io::file_lines;
 
 const INPUT_FILE: &str = "data/p2023_01.txt";
 const DIG_STR: &str = "one|two|three|four|five|six|seven|eight|nine";
@@ -81,13 +81,13 @@ fn get_line_value1(line: &String) -> u32 {
 
 fn main() -> Result<(), Error> {
     let mut sum1 = 0u32;
-    for line in BufReader::new(File::open(INPUT_FILE)?).lines() {
+    for line in file_lines(INPUT_FILE)? {
         sum1 += get_line_value1(&line?);
     }
     println!("sum1: {}", sum1);
 
     let mut sum2 = 0u32;
-    for line in BufReader::new(File::open(INPUT_FILE)?).lines() {
+    for line in file_lines(INPUT_FILE)?{
         sum2 += get_line_value2(&line?);
     }
     println!("sum2: {}", sum2);
