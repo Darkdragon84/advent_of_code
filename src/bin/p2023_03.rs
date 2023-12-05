@@ -19,8 +19,8 @@ fn extract_numbers(prev_line: &Matches, cur_line: &Matches, next_line: &Matches)
         if (start > 0 && cur_line.line[start - 1] != b'.')
             || (end < cur_line.line.len() - 1 && cur_line.line[end] != b'.')
         {
-            // println!("==============");
-            // println!("{}: {number}", cur_line.line);
+            println!("==============");
+            println!("{}: {number}", cur_line.line);
             numbers.push(number);
         }
         let start = max(start as i32 - 1, 0) as usize;
@@ -35,12 +35,48 @@ fn extract_numbers(prev_line: &Matches, cur_line: &Matches, next_line: &Matches)
                 .iter()
                 .any(|sym_match| ranges_overlap((&sym_match.start(), &sym_match.end()), num_range))
         {
-            // println!("==============");
-            // println!("{}\n{}: {number}\n{}", prev_line.line, cur_line.line, next_line.line);
+            println!("==============");
+            println!("{}\n{}: {number}\n{}", prev_line.line, cur_line.line, next_line.line);
             numbers.push(number);
         }
     }
     numbers
+}
+
+fn extract_gear_ratios(prev_line: &Matches, cur_line: &Matches, next_line: &Matches) -> Vec<u32>{
+    let mut ratios: Vec<u32> = Vec::new();
+
+    for gear_match in cur_line.symbol_matches.iter().filter(|m| m.as_str() == "*") {
+        let start = max(gear_match.start() as i32 - 1, 0) as usize;
+        let end = min(gear_match.end() + 1, cur_line.line.len());
+        let gear_range = (&start, &end);
+
+        // chain number matches of all 3 lines!
+        let surrounding_numbers = prev_line
+            .num_matches
+            .iter()
+            .chain(next_line.num_matches.iter().chain(cur_line.num_matches.iter()))
+            .filter(|num_match| ranges_overlap((&num_match.start(), &num_match.end()), gear_range))
+            .map(|num_match| num_match.as_str().parse::<u32>().expect("not a number"))
+            .collect::<Vec<_>>();
+
+
+        if surrounding_numbers.len() == 2 {
+            println!("==============");
+            println!(
+                "{}\n{}: {} -> ({} * {} = {})\n{}",
+                prev_line.line,
+                cur_line.line,
+                gear_match.as_str(),
+                surrounding_numbers[0],
+                surrounding_numbers[1],
+                surrounding_numbers[0] * surrounding_numbers[1],
+                next_line.line
+            );
+            ratios.push(surrounding_numbers[0] * surrounding_numbers[1]);
+        }
+    }
+    ratios
 }
 
 pub struct Matches<'a, 'h> {
@@ -77,16 +113,28 @@ fn main() -> Result<(), Error> {
 
     lines.insert(0, empty.clone());
     lines.push(empty.clone());
+    // dbg!(&lines);
+
     let matches = get_regex_matches(&lines);
 
-    let mut sum = 0u32;
-    // dbg!(&lines);
+    let mut number_sum = 0u32;
     for win in matches.windows(3) {
         if let [prev_line, cur_line, next_line] = win {
             let line_numbers = extract_numbers(prev_line, cur_line, next_line);
-            sum += line_numbers.iter().sum::<u32>();
+            number_sum += line_numbers.iter().sum::<u32>();
         }
     }
-    println!("sum: {sum}");
+    println!("number sum: {number_sum}");
+
+    let mut gear_ratio_sum = 0u32;
+
+    for win in matches.windows(3) {
+        if let [prev_line, cur_line, next_line] = win {
+            let line_ratios = extract_gear_ratios(prev_line, cur_line, next_line);
+            gear_ratio_sum += line_ratios.iter().sum::<u32>();
+        }
+    }
+    println!("gear ratio sum: {gear_ratio_sum}");
+
     Ok(())
 }
