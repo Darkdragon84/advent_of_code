@@ -124,7 +124,6 @@ fn main() -> Result<(), Error> {
             number_sum += line_numbers.iter().sum::<u32>();
         }
     }
-    println!("number sum: {number_sum}");
 
     let mut gear_ratio_sum = 0u32;
 
@@ -134,6 +133,7 @@ fn main() -> Result<(), Error> {
             gear_ratio_sum += line_ratios.iter().sum::<u32>();
         }
     }
+    println!("number sum: {number_sum}");
     println!("gear ratio sum: {gear_ratio_sum}");
 
     Ok(())
