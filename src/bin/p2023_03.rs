@@ -3,7 +3,6 @@ use ascii::AsciiString;
 use regex::{Match, Regex};
 use std::cmp::{max, min};
 
-use std::io::Error;
 const INPUT_FILE: &str = "data/p2023_03.txt";
 
 fn extract_numbers(prev_line: &Matches, cur_line: &Matches, next_line: &Matches) -> Vec<u32> {

@@ -1,6 +1,5 @@
 use regex::Regex;
 use std::collections::HashMap;
-use std::io::Error;
 use advent::util::io::file_lines;
 
 const INPUT_FILE: &str = "data/p2023_02.txt";
