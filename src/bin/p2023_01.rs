@@ -1,6 +1,5 @@
 use regex::Regex;
 use std::collections::HashMap;
-use std::io::Error;
 use advent::util::io::file_lines;
 
 const INPUT_FILE: &str = "data/p2023_01.txt";
@@ -9,23 +8,14 @@ const DIG_STR: &str = "one|two|three|four|five|six|seven|eight|nine";
 fn get_str_to_digit() -> HashMap<&'static str, &'static str> {
     HashMap::from([
         ("one", "1"),
-        // ("1", 1),
         ("two", "2"),
-        // ("2", 2),
         ("three", "3"),
-        // ("3", 3),
         ("four", "4"),
-        // ("4", 4),
         ("five", "5"),
-        // ("5", 5),
         ("six", "6"),
-        // ("6", 6),
         ("seven", "7"),
-        // ("7", 7),
         ("eight", "8"),
-        // ("8", 8),
         ("nine", "9"),
-        // ("9", 9),
     ])
 }
 
@@ -79,17 +69,16 @@ fn get_line_value1(line: &String) -> u32 {
     extract_number_from_digits(&digits)
 }
 
-fn main() -> Result<(), Error> {
+fn main() {
     let mut sum1 = 0u32;
-    for line in file_lines(INPUT_FILE)? {
-        sum1 += get_line_value1(&line?);
+    for line in file_lines(INPUT_FILE) {
+        sum1 += get_line_value1(&line.expect("empty line"));
     }
     println!("sum1: {}", sum1);
 
     let mut sum2 = 0u32;
-    for line in file_lines(INPUT_FILE)?{
-        sum2 += get_line_value2(&line?);
+    for line in file_lines(INPUT_FILE){
+        sum2 += get_line_value2(&line.expect("empty line"));
     }
     println!("sum2: {}", sum2);
-    Ok(())
 }

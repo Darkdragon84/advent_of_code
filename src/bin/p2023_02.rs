@@ -1,6 +1,5 @@
 use regex::Regex;
 use std::collections::HashMap;
-use std::io::Error;
 use advent::util::io::file_lines;
 
 const INPUT_FILE: &str = "data/p2023_02.txt";
@@ -67,13 +66,13 @@ fn process_game(line: &String) -> (u32, u32, u32) {
     )
 }
 
-fn main() -> Result<(), Error> {
+fn main() {
     let (r_max, g_max, b_max) = (12u32, 13u32, 14u32);
 
     let mut id_sum = 0u32;
     let mut power_sum = 0u32;
-    for (id, line) in file_lines(INPUT_FILE)?.enumerate() {
-        let (r, g, b) = process_game(&line?);
+    for (id, line) in file_lines(INPUT_FILE).enumerate() {
+        let (r, g, b) = process_game(&line.expect("empty line"));
         let valid = r <= r_max && g <= g_max && b <= b_max;
         if valid {
             id_sum += (id + 1) as u32;
@@ -83,5 +82,4 @@ fn main() -> Result<(), Error> {
     }
     println!("game id sum: {id_sum}");
     println!("power sum: {power_sum}");
-    Ok(())
 }
