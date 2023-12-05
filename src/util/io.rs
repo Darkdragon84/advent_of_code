@@ -11,11 +11,11 @@ where
     Ok(BufReader::new(file))
 }
 
-pub fn file_lines<P>(path: P) -> Result<Lines<BufReader<File>>, Error>
+pub fn file_lines<P>(path: P) -> Lines<BufReader<File>>
 where
     P: AsRef<Path>,
 {
     // https://doc.rust-lang.org/rust-by-example/std_misc/file/read_lines.html#a-more-efficient-approach
-    let buf = file_buffer(path)?;
-    Ok(buf.lines())
+    let buf = file_buffer(path).expect("file not found");
+    buf.lines()
 }

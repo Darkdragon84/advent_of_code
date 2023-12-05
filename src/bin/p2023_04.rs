@@ -2,7 +2,6 @@ use advent::util::io::file_lines;
 // use ascii::AsciiString;
 use regex::Regex;
 use std::collections::HashSet;
-use std::io::Error;
 
 const INPUT_FILE: &str = "data/p2023_04.txt";
 
@@ -24,9 +23,9 @@ fn num_winning_numbers(line: &String) -> u32 {
         .len() as u32
 }
 
-fn main() -> Result<(), Error> {
-    let num_winning: Vec<u32> = file_lines(INPUT_FILE)?
-        .map(|line| num_winning_numbers(&line.expect("no line found")))
+fn main() {
+    let num_winning: Vec<u32> = file_lines(INPUT_FILE)
+        .map(|line| num_winning_numbers(&line.expect("file not found")))
         .collect();
     let score_sum: u32 = num_winning
         .iter()
@@ -39,5 +38,4 @@ fn main() -> Result<(), Error> {
         })
         .sum();
     println!("score sum: {score_sum}");
-    Ok(())
 }

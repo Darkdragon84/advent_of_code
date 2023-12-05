@@ -36,14 +36,17 @@ fn extract_numbers(prev_line: &Matches, cur_line: &Matches, next_line: &Matches)
                 .any(|sym_match| ranges_overlap((&sym_match.start(), &sym_match.end()), num_range))
         {
             println!("==============");
-            println!("{}\n{}: {number}\n{}", prev_line.line, cur_line.line, next_line.line);
+            println!(
+                "{}\n{}: {number}\n{}",
+                prev_line.line, cur_line.line, next_line.line
+            );
             numbers.push(number);
         }
     }
     numbers
 }
 
-fn extract_gear_ratios(prev_line: &Matches, cur_line: &Matches, next_line: &Matches) -> Vec<u32>{
+fn extract_gear_ratios(prev_line: &Matches, cur_line: &Matches, next_line: &Matches) -> Vec<u32> {
     let mut ratios: Vec<u32> = Vec::new();
 
     for gear_match in cur_line.symbol_matches.iter().filter(|m| m.as_str() == "*") {
@@ -55,11 +58,15 @@ fn extract_gear_ratios(prev_line: &Matches, cur_line: &Matches, next_line: &Matc
         let surrounding_numbers = prev_line
             .num_matches
             .iter()
-            .chain(next_line.num_matches.iter().chain(cur_line.num_matches.iter()))
+            .chain(
+                next_line
+                    .num_matches
+                    .iter()
+                    .chain(cur_line.num_matches.iter()),
+            )
             .filter(|num_match| ranges_overlap((&num_match.start(), &num_match.end()), gear_range))
             .map(|num_match| num_match.as_str().parse::<u32>().expect("not a number"))
             .collect::<Vec<_>>();
-
 
         if surrounding_numbers.len() == 2 {
             println!("==============");
@@ -102,8 +109,8 @@ pub fn get_regex_matches(lines: &Vec<AsciiString>) -> Vec<Matches> {
     matches
 }
 
-fn main() -> Result<(), Error> {
-    let mut lines: Vec<AsciiString> = file_lines(INPUT_FILE)?
+fn main() {
+    let mut lines: Vec<AsciiString> = file_lines(INPUT_FILE)
         .map(|line| AsciiString::from_ascii(line.expect("not a line")).expect("not ascii"))
         .collect();
     let line_length = lines.iter().next().expect("no first line").len();
@@ -135,6 +142,4 @@ fn main() -> Result<(), Error> {
     }
     println!("number sum: {number_sum}");
     println!("gear ratio sum: {gear_ratio_sum}");
-
-    Ok(())
 }
