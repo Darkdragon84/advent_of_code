@@ -3,33 +3,44 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::iter;
+use std::ops::Range;
 
 const INPUT_FILE: &str = "data/p2023_05_test.txt";
 
 #[derive(Debug)]
 struct GardenRange {
-    map: HashMap<u32, u32>,
+    dst_start: usize,
+    src_start: usize,
+    len: usize,
 }
 
 impl GardenRange {
-    pub fn new(dst_start: u32, src_start: u32, len: u32) -> Self {
-        let map: HashMap<u32, u32> = HashMap::from_iter(iter::zip(
-            src_start..(src_start + len),
-            dst_start..(dst_start + len),
-        ));
-        Self { map }
+    pub fn src_end(&self) -> usize {
+        self.src_start + self.len
+    }
+    pub fn src_range(&self) -> Range<usize> {
+        self.src_start..self.src_end()
+    }
+    pub fn dst_end(&self) -> usize {
+        self.dst_start + self.len
+    }
+    pub fn dst_range(&self) -> Range<usize> {
+        self.dst_start..self.dst_end()
+    }
+    pub fn map(&self) -> HashMap<usize, usize> {
+        HashMap::from_iter(iter::zip(self.src_range(), self.dst_range()))
     }
 }
 #[derive(Debug)]
 struct GardenMap {
     source: String,
     destination: String,
-    map: HashMap<u32, u32>,
+    map: HashMap<usize, usize>,
 }
 
 impl GardenMap {
     pub fn new(source: String, destination: String) -> Self {
-        let map: HashMap<u32, u32> = HashMap::new();
+        let map: HashMap<usize, usize> = HashMap::new();
         Self {
             source,
             destination,
@@ -37,10 +48,10 @@ impl GardenMap {
         }
     }
     pub fn extend(&mut self, range: GardenRange) {
-        self.map.extend(range.map)
+        self.map.extend(range.map())
     }
 
-    pub fn get<'b>(&'b self, source: &'b u32) -> &'b u32 {
+    pub fn get<'b>(&'b self, source: &'b usize) -> &'b usize {
         self.map.get(source).unwrap_or(source)
     }
 }
@@ -77,22 +88,26 @@ impl MapCollection {
                     c.name("src")
                         .expect("src not found")
                         .as_str()
-                        .parse::<u32>()
+                        .parse::<usize>()
                         .expect("not a number"),
                     c.name("dst")
                         .expect("dst not found")
                         .as_str()
-                        .parse::<u32>()
+                        .parse::<usize>()
                         .expect("not a number"),
                     c.name("len")
                         .expect("len not found")
                         .as_str()
-                        .parse::<u32>()
+                        .parse::<usize>()
                         .expect("not a number"),
                 );
 
                 if let Some(ref mut map) = mapopt {
-                    map.extend(GardenRange::new(dst_start, src_start, len));
+                    map.extend(GardenRange {
+                        dst_start,
+                        src_start,
+                        len,
+                    });
                 }
                 println!("{}: src: {src_start}, dst: {dst_start}, len: {len}", line);
             }
@@ -101,7 +116,7 @@ impl MapCollection {
         Self::from_maps(maps)
     }
 
-    pub fn get<'a>(&'a self, value: &'a u32, destination: &String) -> Option<&'a u32> {
+    pub fn get<'a>(&'a self, value: &'a usize, destination: &String) -> Option<&'a usize> {
         let mut src = &"seed".to_string();
         loop {
             let mapopt = self.name_to_map.get(src);
@@ -126,9 +141,9 @@ fn main() {
         .filter(|line| line.len() > 0)
         .collect();
     let seeds = lines.remove(0);
-    let seeds: Vec<u32> = re_seed
+    let seeds: Vec<usize> = re_seed
         .find_iter(&seeds.as_str())
-        .map(|m| m.as_str().parse::<u32>().expect("not a valid number"))
+        .map(|m| m.as_str().parse::<usize>().expect("not a valid number"))
         .collect();
     let collection = MapCollection::from_lines(&lines);
     let dst = "location".to_string();
