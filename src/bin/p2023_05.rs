@@ -10,26 +10,19 @@ const INPUT_FILE: &str = "data/p2023_05.txt";
 
 #[derive(Debug, Hash)]
 struct GardenRange {
-    dst_start: usize,
-    src_start: usize,
-    len: usize,
+    dst_range: Range<usize>,
+    src_range: Range<usize>,
 }
 
 impl GardenRange {
-    pub fn src_end(&self) -> usize {
-        self.src_start + self.len
+    pub fn new(    dst_start: usize,        src_start: usize,        len: usize) -> Self {
+            Self { dst_range: dst_start..(dst_start + len), src_range: src_start..(src_start + len)}
+        }
+    pub fn src_contains(&self, value: &usize) -> bool {
+        self.src_range.contains(value)
     }
-    pub fn src_range(&self) -> Range<usize> {
-        self.src_start..self.src_end()
-    }
-    pub fn dst_end(&self) -> usize {
-        self.dst_start + self.len
-    }
-    pub fn dst_range(&self) -> Range<usize> {
-        self.dst_start..self.dst_end()
-    }
-    pub fn map(&self) -> HashMap<usize, usize> {
-        HashMap::from_iter(iter::zip(self.src_range(), self.dst_range()))
+    pub fn dst_contains(&self, value: &usize) -> bool {
+        self.dst_range.contains(value)
     }
 }
 #[derive(Debug)]
