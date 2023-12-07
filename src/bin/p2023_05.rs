@@ -1,6 +1,6 @@
 use advent::util::io::file_lines;
 use regex::Regex;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{Debug, Display};
 use std::iter;
@@ -15,21 +15,24 @@ struct GardenRange {
 }
 
 impl GardenRange {
-    pub fn new(    dst_start: usize,        src_start: usize,        len: usize) -> Self {
-            Self { dst_range: dst_start..(dst_start + len), src_range: src_start..(src_start + len)}
+    pub fn new(dst_start: usize, src_start: usize, len: usize) -> Self {
+        Self {
+            dst_range: dst_start..(dst_start + len),
+            src_range: src_start..(src_start + len),
         }
-    pub fn src_contains(&self, value: &usize) -> bool {
+    }
+    pub fn contains(&self, value: &usize) -> bool {
         self.src_range.contains(value)
     }
-    pub fn dst_contains(&self, value: &usize) -> bool {
-        self.dst_range.contains(value)
+    pub fn map(&self, src: &usize) -> usize {
+        src - self.src_range.start + self.dst_range.start
     }
 }
 #[derive(Debug)]
 struct GardenMap {
     source: String,
     destination: String,
-    map: HashMap<usize, usize>,
+    maps: Vec<GardenRange>,
 }
 #[derive(Debug)]
 struct GardenMapError;
@@ -44,30 +47,35 @@ impl Error for GardenMapError {}
 
 impl GardenMap {
     pub fn new(source: String, destination: String) -> Self {
-        let map: HashMap<usize, usize> = HashMap::new();
+        let maps: Vec<GardenRange> = Vec::new();
         Self {
             source,
             destination,
-            map,
+            maps,
         }
     }
     pub fn update(&mut self, range: GardenRange) {
-        self.map.extend(range.map())
+        self.maps.push(range)
     }
 
-    pub fn get<'b>(&'b self, source: &'b usize) -> &'b usize {
-        self.map.get(source).unwrap_or(source)
-    }
-
-    pub fn check(&self) -> Result<(), GardenMapError> {
-        let key_set: HashSet<&usize> = self.map.keys().clone().collect();
-        let value_set: HashSet<&usize> = self.map.values().clone().collect();
-        if key_set != value_set {
-            return Err(GardenMapError);
-        } else {
-            Ok(())
+    pub fn map(&self, source: &usize) -> usize {
+        for map in self.maps.iter() {
+            if map.contains(source) {
+                return map.map(source);
+            }
         }
+        source.clone()
     }
+
+    // pub fn check(&self) -> Result<(), GardenMapError> {
+    //     let key_set: HashSet<&usize> = self.map.keys().clone().collect();
+    //     let value_set: HashSet<&usize> = self.map.values().clone().collect();
+    //     if key_set != value_set {
+    //         return Err(GardenMapError);
+    //     } else {
+    //         Ok(())
+    //     }
+    // }
 }
 
 #[derive(Debug)]
@@ -116,11 +124,7 @@ impl MapCollection {
                 );
 
                 if let Some(ref mut map) = mapopt {
-                    map.update(GardenRange {
-                        dst_start,
-                        src_start,
-                        len,
-                    });
+                    map.update(GardenRange::new(dst_start, src_start, len));
                 }
             }
         }
@@ -128,20 +132,15 @@ impl MapCollection {
         Self::from_maps(maps)
     }
 
-    pub fn get<'a>(
-        &'a self,
-        value: &'a usize,
-        source: &String,
-        destination: &String,
-    ) -> Option<&'a usize> {
+    pub fn get(&self, value: &usize, source: &String, destination: &String) -> Option<usize> {
         let mut src = source;
-        let mut val = value;
+        let mut val = value.clone();
         loop {
             let mapopt = self.name_to_map.get(src);
             match mapopt {
                 None => break None,
                 Some(ref map) => {
-                    val = map.get(&val);
+                    val = map.map(&val);
                     src = &map.destination;
                     if map.destination == *destination {
                         break Some(val);
@@ -151,32 +150,21 @@ impl MapCollection {
         }
     }
 
-    pub fn get_map(&self, source: String) -> Option<&GardenMap> {
-        self.name_to_map.get(&source)
-    }
+    // pub fn get_map(&self, source: String) -> Option<&GardenMap> {
+    //     self.name_to_map.get(&source)
+    // }
 }
 
-fn main() {
+fn part1(collection: &MapCollection, seed_line: &String) {
     let re_seed = Regex::new(r"\d+").expect("not a valid regex");
-    let mut lines: Vec<String> = file_lines(INPUT_FILE)
-        .filter_map(|line| line.ok())
-        .filter(|line| line.len() > 0)
-        .collect();
-
-    let seeds = lines.remove(0);
     let seeds: Vec<usize> = re_seed
-        .find_iter(&seeds.as_str())
+        .find_iter(&seed_line.as_str())
         .map(|m| m.as_str().parse::<usize>().expect("not a valid number"))
         .collect();
-    let collection = MapCollection::from_lines(&lines);
-    println!("created collection");
-    // for map in collection.name_to_map.values() {
-    //     println!("{} -> {}: {:?}", map.source, map.destination, map.check())
-    // }
 
     let src = "seed".to_string();
     let dst = "location".to_string();
-    let locations: Vec<&usize> = seeds
+    let locations: Vec<usize> = seeds
         .iter()
         .map(|seed| collection.get(seed, &src, &dst).expect("couldn't map seed"))
         .collect();
@@ -187,4 +175,18 @@ fn main() {
         "min location: {}",
         locations.iter().min().expect("no elements")
     );
+}
+fn main() {
+    let mut lines: Vec<String> = file_lines(INPUT_FILE)
+        .filter_map(|line| line.ok())
+        .filter(|line| line.len() > 0)
+        .collect();
+
+    let seed_line = lines.remove(0);
+    let collection = MapCollection::from_lines(&lines);
+    println!("created collection");
+    part1(&collection, &seed_line);
+    // for map in collection.name_to_map.values() {
+    //     println!("{} -> {}: {:?}", map.source, map.destination, map.check())
+    // }
 }
