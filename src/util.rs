@@ -1,4 +1,5 @@
 pub mod io;
+pub mod ranges;
 
 use std::{
     cmp::{max, min},

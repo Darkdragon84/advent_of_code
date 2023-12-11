@@ -1,5 +1,8 @@
 use advent::util::io::file_lines;
+use advent::util::ranges::{RangeOverlap, RangeCmp, Domain, self};
 use regex::Regex;
+use std::cmp::PartialOrd;
+use std::cmp::{max, min, Ordering};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{Debug, Display};
@@ -8,10 +11,10 @@ use std::ops::Range;
 
 const INPUT_FILE: &str = "data/p2023_05.txt";
 
-#[derive(Debug, Hash)]
+#[derive(Debug, Hash, Clone)]
 struct GardenRange {
-    dst_range: Range<usize>,
     src_range: Range<usize>,
+    dst_range: Range<usize>,
 }
 
 impl GardenRange {
@@ -32,7 +35,7 @@ impl GardenRange {
 struct GardenMap {
     source: String,
     destination: String,
-    maps: Vec<GardenRange>,
+    ranges: Vec<GardenRange>,
 }
 #[derive(Debug)]
 struct GardenMapError;
@@ -47,19 +50,28 @@ impl Error for GardenMapError {}
 
 impl GardenMap {
     pub fn new(source: String, destination: String) -> Self {
-        let maps: Vec<GardenRange> = Vec::new();
+        let ranges: Vec<GardenRange> = Vec::new();
         Self {
             source,
             destination,
-            maps,
+            ranges,
         }
     }
+
+    pub fn from_ranges(source: String, destination: String, ranges: Vec<GardenRange>) -> GardenMap {
+        Self {
+            source,
+            destination,
+            ranges,
+        }
+    }
+
     pub fn update(&mut self, range: GardenRange) {
-        self.maps.push(range)
+        self.ranges.push(range)
     }
 
     pub fn map(&self, source: &usize) -> usize {
-        for map in self.maps.iter() {
+        for map in self.ranges.iter() {
             if map.contains(source) {
                 return map.map(source);
             }
@@ -67,6 +79,30 @@ impl GardenMap {
         source.clone()
     }
 
+    pub fn merge(&self, other: &Self) -> Self {
+        let src_ranges: Vec<Range<usize>> = Vec::new();
+        let dst_ranges: Vec<Range<usize>> = Vec::new();
+
+        let mut this_dst_ranges: Vec<Range<usize>> =
+            self.ranges.iter().map(|r| r.dst_range.clone()).collect();
+        this_dst_ranges.sort_by(|r1, r2| r1.range_cmp(&r2));
+        let mut other_src_ranges: Vec<Range<usize>> =
+            self.ranges.iter().map(|r| r.src_range.clone()).collect();
+        other_src_ranges.sort_by(|r1, r2| r1.range_cmp(&r2));
+
+        let mut ranges: Vec<GardenRange> = Vec::new();
+
+        // for this_range in self.ranges.iter() {
+        //     for other_range in other.ranges.iter() {
+        //         if let Some(overlap) = RangeOverlap::new(&this_range.dst_range, &other_range.src_range) {
+
+        //         } else {
+        //             ranges.push(this_range.clone());
+        //         }
+        //     }
+        // }
+        Self::from_ranges(self.source.clone(), other.destination.clone(), ranges)
+    }
     // pub fn check(&self) -> Result<(), GardenMapError> {
     //     let key_set: HashSet<&usize> = self.map.keys().clone().collect();
     //     let value_set: HashSet<&usize> = self.map.values().clone().collect();
@@ -176,16 +212,56 @@ fn part1(collection: &MapCollection, seed_line: &String) {
         locations.iter().min().expect("no elements")
     );
 }
-fn main() {
-    let mut lines: Vec<String> = file_lines(INPUT_FILE)
-        .filter_map(|line| line.ok())
-        .filter(|line| line.len() > 0)
-        .collect();
 
-    let seed_line = lines.remove(0);
-    let collection = MapCollection::from_lines(&lines);
-    println!("created collection");
-    part1(&collection, &seed_line);
+pub fn interleave(r1: Vec<Range<usize>>, r2: Vec<Range<usize>>) {
+    let mut r1m = r1;
+    r1m.sort_by(|r1, r2| r1.range_cmp(&r2));
+    let mut r2m = r2;
+    r2m.sort_by(|r1, r2| r1.range_cmp(&r2));
+    let mut lhs = r1m.pop().unwrap();
+    let mut rhs = r2m.pop().unwrap();
+
+    let mut result: Vec<Range<usize>> = Vec::new();
+    while r1m.len() > 0 || r2m.len() > 0 {
+        if let Some(overlap) = RangeOverlap::new(&lhs, &rhs) {
+            if let Some(domain_range) = overlap.greater_remainder {
+                match domain_range {
+                    Domain::Source(range) => {result.push(range)},
+                    Domain::Destination(range) => {result.push(range)}
+                }
+            }
+            result.push(overlap.overlap);
+        } else {
+            match lhs.range_cmp(&rhs) {
+                Ordering::Less => {rhs = r2m.pop().unwrap()},
+                Ordering::Greater => {lhs = r1m.pop().unwrap()},
+                Ordering::Equal => {panic!("this shouldn't be possible")}
+            } 
+        }
+    }
+}
+fn main() {
+    let r1 = 10..14usize;
+    let r2 = 8usize..12usize;
+    let r3 = 8usize..20usize;
+    let r4 = 14usize..20usize;
+    let mut ranges = vec![r4, r2, r1, r3];
+    ranges.sort_by(|r1, r2| r1.range_cmp(&r2));
+    println!("{:?}", ranges);
+    // println!("{:?} & {:?} = {:?}", r1, r2, RangeOverlap::new(&r1, &r2));
+    // println!("{:?} & {:?} = {:?}", r2, r3, RangeOverlap::new(&r2, &r3));
+    // println!("{:?} & {:?} = {:?}", r3, r1, RangeOverlap::new(&r3, &r1));
+    // println!("{:?} & {:?} = {:?}", r1, r4, RangeOverlap::new(&r1, &r4));
+
+    // let mut lines: Vec<String> = file_lines(INPUT_FILE)
+    //     .filter_map(|line| line.ok())
+    //     .filter(|line| line.len() > 0)
+    //     .collect();
+
+    // let seed_line = lines.remove(0);
+    // let collection = MapCollection::from_lines(&lines);
+    // println!("created collection");
+    // part1(&collection, &seed_line);
     // for map in collection.name_to_map.values() {
     //     println!("{} -> {}: {:?}", map.source, map.destination, map.check())
     // }
